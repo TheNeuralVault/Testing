@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>THE SINGULARITY | Neural Matrix Vault</title>
+    
+    <!-- FORTRESS SECURITY -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:;">
+
+    <meta name="description" content="The Center of the Digital Universe. The Neural Matrix Singularity.">
+    <meta name="theme-color" content="#000000">
+
+    <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --void: #000000; --neon: #00f3ff; }
+        body { margin: 0; overflow: hidden; background: var(--void); font-family: 'Space Mono', monospace; }
+        
+        /* UI OVERLAY */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 10;
+            display: flex; flex-direction: column; justify-content: space-between; padding: 40px;
+        }
+        
+        .header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .brand { font-family: 'Space Mono'; font-weight: 700; color: #fff; letter-spacing: 2px; font-size: 1.2rem; }
+        .brand span { color: var(--neon); }
+        
+        .status { 
+            text-align: right; color: var(--neon); font-size: 0.8rem; 
+            border: 1px solid var(--neon); padding: 5px 10px; background: rgba(0, 243, 255, 0.1);
+        }
+
+        .footer { display: flex; justify-content: space-between; align-items: flex-end; color: #555; font-size: 0.7rem; }
+        .instruction { color: #fff; animation: pulse 2s infinite; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* LABEL (Appears on Hover) */
+        #label-container {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; pointer-events: none; opacity: 0; transition: opacity 0.3s;
+            mix-blend-mode: difference;
+        }
+        .label-title { 
+            font-family: 'Outfit'; font-weight: 800; font-size: 4rem; color: #fff; 
+            line-height: 1; text-transform: uppercase; letter-spacing: -2px;
+        }
+        .label-sub { font-family: 'Space Mono'; color: var(--neon); letter-spacing: 2px; margin-top: 10px; }
+
+        /* LOADING */
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000;
+            z-index: 999; display: flex; align-items: center; justify-content: center;
+            color: var(--neon); font-size: 1.5rem; letter-spacing: 5px; transition: opacity 1s;
+        }
+
+        /* CANVAS */
+        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; outline: none; }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @media (max-width: 768px) { .label-title { font-size: 2.5rem; } .header { padding: 20px; } }
+    </style>
+</head>
+<body>
+
+    <div id="loader">/// INITIALIZING_SINGULARITY...</div>
+
+    <!-- UI LAYER -->
+    <div id="ui-layer">
+        <div class="header">
+            <div class="brand">NEURAL<span>_MATRIX</span></div>
+            <div class="status">SYSTEM_STABLE</div>
+        </div>
+        
+        <div id="label-container">
+            <div class="label-title" id="p-title"></div>
+            <div class="label-sub" id="p-sub"></div>
+        </div>
+
+        <div class="footer">
+            <div>COORDS: <span id="coords">00.00.00</span></div>
+            <div class="instruction">[ MOUSE_OVER TO SCAN / CLICK TO WARP ]</div>
+        </div>
+    </div>
+
+    <!-- 3D ENGINE -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- POST PROCESSING (BLOOM) -->
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script>
+        // --- THE MAGNUS OPUS ENGINE ---
+        
+        // 1. SETUP
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 18;
+        camera.position.y = 8;
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.body.appendChild(renderer.domElement);
+
+        // 2. THE SEVEN PILLARS (DATA)
+        const pillars = [
+            { name: "NEURAL CORE", sub: "THE BRAIN", color: 0x00f3ff, geo: new THREE.IcosahedronGeometry(1, 1), url: "core.html" },
+            { name: "FLUX VELOCITY", sub: "THE SPEED", color: 0xff0055, geo: new THREE.TorusGeometry(0.8, 0.3, 16, 50), url: "flux.html" },
+            { name: "AERO PROTOCOL", sub: "THE STRUCTURE", color: 0xffffff, geo: new THREE.BoxGeometry(1.2, 1.2, 1.2), url: "aero.html" },
+            { name: "NEXUS STREAM", sub: "THE VOICE", color: 0xbc13fe, geo: new THREE.SphereGeometry(1, 32, 32), url: "nexus.html" },
+            { name: "CIPHER PROTOCOL", sub: "THE WEALTH", color: 0xffaa00, geo: new THREE.DodecahedronGeometry(1), url: "cipher.html" },
+            { name: "PRISM SaaS", sub: "THE INTERFACE", color: 0x00ffaa, geo: new THREE.ConeGeometry(1, 2, 4), url: "prism.html" },
+            { name: "OMEGA REALITY", sub: "THE DIMENSION", color: 0xff5500, geo: new THREE.TorusKnotGeometry(0.7, 0.2, 64, 8), url: "omega.html" }
+        ];
+
+        const orbitGroup = new THREE.Group();
+        scene.add(orbitGroup);
+        const pillarMeshes = [];
+
+        // 3. GENERATE PILLARS
+        const radius = 10;
+        pillars.forEach((p, i) => {
+            const angle = (i / pillars.length) * Math.PI * 2;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+
+            const mat = new THREE.MeshBasicMaterial({ color: p.color, wireframe: true });
+            const mesh = new THREE.Mesh(p.geo, mat);
+            
+            mesh.position.set(x, 0, z);
+            mesh.userData = { ...p, originalY: 0 }; // Store data for interaction
+            
+            orbitGroup.add(mesh);
+            pillarMeshes.push(mesh);
+
+            // Add inner glow (PointLight) for each
+            const light = new THREE.PointLight(p.color, 1, 8);
+            light.position.set(x, 0, z);
+            orbitGroup.add(light);
+        });
+
+        // 4. THE SINGULARITY (Central Core - GLSL Shader)
+        const sunGeo = new THREE.SphereGeometry(3, 64, 64);
+        
+        // Custom Shader for "Liquid Sun"
+        const sunMat = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 },
+                color1: { value: new THREE.Color(0x000000) }, // Void
+                color2: { value: new THREE.Color(0x00f3ff) }  // Neon
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                varying vec3 vNormal;
+                uniform float time;
+                void main() {
+                    vUv = uv;
+                    vNormal = normal;
+                    vec3 pos = position;
+                    // Pulse Effect
+                    pos += normal * sin(pos.y * 3.0 + time) * 0.1;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                }
+            `,
+            fragmentShader: `
+                varying vec2 vUv;
+                varying vec3 vNormal;
+                uniform float time;
+                uniform vec3 color1;
+                uniform vec3 color2;
+                void main() {
+                    float noise = sin(vUv.x * 20.0 + time) * sin(vUv.y * 20.0 + time);
+                    vec3 glow = mix(color1, color2, noise * 0.5 + 0.5);
+                    // Edge glow
+                    float intensity = pow(0.6 - dot(vNormal, vec3(0, 0, 1.0)), 2.0);
+                    gl_FragColor = vec4(glow + vec3(intensity), 1.0);
+                }
+            `
+        });
+
+        const sun = new THREE.Mesh(sunGeo, sunMat);
+        scene.add(sun);
+
+        // 5. STARDUST (The Matrix)
+        const starsGeo = new THREE.BufferGeometry();
+        const starsCount = 5000;
+        const starPos = new Float32Array(starsCount * 3);
+        for(let i=0; i<starsCount*3; i++) starPos[i] = (Math.random() - 0.5) * 100;
+        starsGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+        const starsMat = new THREE.PointsMaterial({ size: 0.05, color: 0x444444 });
+        const stars = new THREE.Points(starsGeo, starsMat);
+        scene.add(stars);
+
+        // 6. POST-PROCESSING (UNREAL BLOOM)
+        const renderScene = new THREE.RenderPass(scene, camera);
+        const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        bloomPass.threshold = 0;
+        bloomPass.strength = 1.2; // GLOW STRENGTH
+        bloomPass.radius = 0.5;
+
+        const composer = new THREE.EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+
+        // 7. INTERACTION (Raycasting)
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let hoveredObj = null;
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            
+            // HUD Coords
+            document.getElementById('coords').innerText = `${e.clientX}.${e.clientY}`;
+        });
+
+        window.addEventListener('click', () => {
+            if (hoveredObj) {
+                // Warp Effect
+                gsap.to(camera.position, { z: 0, duration: 0.5, ease: "power4.in", onComplete: () => {
+                    window.location.href = hoveredObj.userData.url;
+                }});
+            }
+        });
+
+        // 8. ANIMATION LOOP
+        const clock = new THREE.Clock();
+
+        function animate() {
+            // requestAnimationFrame(animate); Use Composer Loop
+            
+            const time = clock.getElapsedTime();
+            
+            // Rotate Core
+            sunMat.uniforms.time.value = time * 2;
+            sun.rotation.y = time * 0.2;
+
+            // Rotate System
+            orbitGroup.rotation.y = time * 0.1;
+            stars.rotation.y = time * 0.02;
+
+            // Rotate Individual Pillars
+            pillarMeshes.forEach(mesh => {
+                mesh.rotation.x += 0.01;
+                mesh.rotation.y += 0.01;
+            });
+
+            // RAYCASTING
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(pillarMeshes);
+
+            if (intersects.length > 0) {
+                if (hoveredObj !== intersects[0].object) {
+                    // MOUSE ENTER
+                    hoveredObj = intersects[0].object;
+                    document.body.style.cursor = 'pointer';
+                    
+                    // Update Text
+                    const label = document.getElementById('label-container');
+                    const title = document.getElementById('p-title');
+                    const sub = document.getElementById('p-sub');
+                    
+                    title.innerText = hoveredObj.userData.name;
+                    title.style.color = '#' + hoveredObj.material.color.getHexString();
+                    sub.innerText = hoveredObj.userData.sub;
+                    label.style.opacity = '1';
+
+                    // Highlight Object
+                    gsap.to(hoveredObj.scale, { x: 1.5, y: 1.5, z: 1.5, duration: 0.3 });
+                    hoveredObj.material.wireframe = false; // Turn solid
+                }
+            } else {
+                if (hoveredObj) {
+                    // MOUSE LEAVE
+                    gsap.to(hoveredObj.scale, { x: 1, y: 1, z: 1, duration: 0.3 });
+                    hoveredObj.material.wireframe = true; // Back to wire
+                    
+                    document.getElementById('label-container').style.opacity = '0';
+                    document.body.style.cursor = 'default';
+                    hoveredObj = null;
+                }
+            }
+
+            composer.render(); // Use Composer instead of Renderer for Bloom
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // 9. RESIZE & LOAD
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        window.onload = () => {
+            const loader = document.getElementById('loader');
+            loader.style.opacity = '0';
+            setTimeout(() => loader.remove(), 1000);
+        };
+
+    </script>
+</body>
+</html>
